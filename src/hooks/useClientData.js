@@ -21,7 +21,11 @@ export const useClientData = () => {
         const fetchClients = async () => {
             try {
                 const params = {
-                    TableName: 'Prospects'
+                    // Josue's Table
+                    // TableName: 'Prospects'
+
+                    // Martin Table
+                    TableName: 'stir-test2'
                 };
                 const result = await dynamoDB.scan(params).promise();
                 setClients(result.Items);

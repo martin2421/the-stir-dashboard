@@ -6,11 +6,18 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
     return (
         <>
             <tr>
-                <td>{client.clientName}</td>
+                {/* {console.log(client)} */}
+                {console.log("NAME: " + client.firstName + " " + client.lastName)}
+                {console.log("BUSINESS NAME: " + client.businessName)}
+                {console.log("EMAIL: " + client.email)}
+                {console.log("PHONE: " + client.phoneNumber)}
+                {console.log("SERVICE: " + client.service)}
+
+                <td>{client.firstName + " " + client.lastName}</td>
                 <td>{client.businessName}</td>
                 <td>{client.email}</td>
                 <td>{client.phoneNumber}</td>
-                <td>{client.serviceType}</td>
+                <td>{client.service}</td>
                 <td>
                     <button className="expand-btn" onClick={onToggle}>
                         {isExpanded ? 'Hide Details' : 'View Details'}

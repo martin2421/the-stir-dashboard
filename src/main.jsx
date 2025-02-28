@@ -4,7 +4,8 @@ import './index.css'
 import Table from './Table.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
+  //   <Table />
+  // </StrictMode>,
     <Table />
-  </StrictMode>,
 )
