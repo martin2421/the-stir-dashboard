@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { DynamoDB } from 'aws-sdk';
+import AWS from 'aws-sdk';
 
-const dynamoDB = new DynamoDB.DocumentClient({
-    region: 'your-region',
-    credentials: {
-        accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY
-    }
+AWS.config.update({
+    region: 'us-east-1',
+    endpoint: 'dynamodb.us-east-1.amazonaws.com',
+    credentials: new AWS.Credentials({
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    })
 });
+
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 export const useClientData = () => {
     const [clients, setClients] = useState([]);
@@ -18,7 +21,7 @@ export const useClientData = () => {
         const fetchClients = async () => {
             try {
                 const params = {
-                    TableName: 'your-table-name'
+                    TableName: 'Prospects'
                 };
                 const result = await dynamoDB.scan(params).promise();
                 setClients(result.Items);

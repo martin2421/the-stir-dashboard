@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.758.0",
+    "@aws-sdk/lib-dynamodb": "^3.758.0",
+    "@aws-sdk/util-dynamodb": "^3.758.0",
     "aws": "^0.0.3-2",
     "aws-sdk": "^2.1692.0",
     "dotenv": "^16.4.7",
