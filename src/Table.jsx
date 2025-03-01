@@ -192,6 +192,8 @@ export default function Table() {
             <h2>Client Data Table</h2>
             <input
                 type="text"
+                id="searchInput"
+                className='search-input'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search for names, services, or requirements..."
