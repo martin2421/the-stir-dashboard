@@ -18,14 +18,17 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
         }
     };
 
-    // Parse services string into array
-    // const servicesList = client.services ?
-    //     (typeof client.services === 'string' ?
-    //         client.services.split(',').map(s => s.trim()) :
-    //         Array.isArray(client.services) ?
-    //             client.services :
-    //             []
-    //     ) : [];
+    const formatPhoneNumber = (phoneNumber) => {
+        if (!phoneNumber) return 'Not specified';
+        // Remove all non-digit characters
+        const cleaned = ('' + phoneNumber).replace(/\D/g, '');
+        // Check if the number has 10 digits
+        const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+        if (match) {
+            return `+1 (${match[1]}) ${match[2]}-${match[3]}`;
+        }
+        return phoneNumber; // Return original if format doesn't match
+    };
 
     const servicesList = parseList(client.services);
     const equipmentList = parseList(client.equipmentNeeds);
@@ -54,7 +57,7 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
                 <td>{`${client.firstName} ${client.lastName}`}</td>
                 <td>{client.businessName}</td>
                 <td>{client.email}</td>
-                <td>{client.phoneNumber}</td>
+                <td>{formatPhoneNumber(client.phoneNumber)}</td>
                 <td>
                     <ul className="service-list">
                         {servicesList.map((service, index) => (
