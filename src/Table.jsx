@@ -82,48 +82,75 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
                                 <p><strong>Signed Up:</strong> {new Date(client.signedUp).toLocaleDateString()}</p>
                             </div>
 
-                            <div className="details-section">
-                                <h4>Event Details</h4>
-                                <p><strong>Venue Location:</strong> {
-                                    client.eventVenue ?
-                                        typeof client.eventVenue === 'string' ?
-                                            JSON.parse(client.eventVenue).venue_location :
-                                            client.eventVenue.venue_location
-                                        : 'Not specified'
-                                }</p>
-                                <p><strong>Venue Capacity:</strong> {
-                                    client.eventVenue ?
-                                        typeof client.eventVenue === 'string' ?
-                                            JSON.parse(client.eventVenue).venue_capacity :
-                                            client.eventVenue.venue_capacity
-                                        : 'Not specified'
-                                }</p>
-                                <p><strong>Venue Times:</strong> {client.eventVenueTimes || 'Not specified'}</p>
-                            </div>
-
-                            <div className="details-section">
-                                <h4>Requirements</h4>
-                                <div className="details-lists">
-                                    <div>
-                                        <strong>Equipment Needs:</strong>
-                                        <ul>
-                                            {equipmentList.map((need, index) => (
-                                                <li key={index}>{need}</li>
-                                            ))}
-                                        </ul>
+                            {servicesList.includes('Event Venue') ? (
+                                    <>
+                                    <div className="details-section">
+                                        <h4>Event Details</h4>
+                                        <p><strong>Venue Location:</strong> {
+                                            client.eventVenue ?
+                                                typeof client.eventVenue === 'string' ?
+                                                    JSON.parse(client.eventVenue).venue_location :
+                                                    client.eventVenue.venue_location
+                                                : 'Not specified'
+                                        }</p>
+                                        <p><strong>Venue Capacity:</strong> {
+                                            client.eventVenue ?
+                                                typeof client.eventVenue === 'string' ?
+                                                    JSON.parse(client.eventVenue).venue_capacity :
+                                                    client.eventVenue.venue_capacity
+                                                : 'Not specified'
+                                        }</p>
+                                        <p><strong>Venue Times:</strong> {client.eventVenueTimes || 'Not specified'}</p>
                                     </div>
-                                    <div>
-                                        <strong>Space Needs:</strong>
-                                        <ul>
-                                            {spaceList.map((need, index) => (
-                                                <li key={index}>{need}</li>
-                                            ))}
-                                        </ul>
+
+                                    <div className="details-section">
+                                    <h4>Products & Licenses</h4>
+                                    <div className="details-lists">
+                                        <div>
+                                            <strong>Products:</strong>
+                                            <ul>
+                                                {productsList.map((product, index) => (
+                                                    <li key={index}>{product}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <strong>Licenses:</strong>
+                                            <ul>
+                                                {licensesList.map((license, index) => (
+                                                    <li key={index}>
+                                                        {license.name}: {license.status ? '✅' : '❌'}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="details-section">
+
+                                <div className="details-section">
+                                    <h4>Requirements</h4>
+                                    <div className="details-lists">
+                                        <div>
+                                            <strong>Additional Notes</strong>
+                                            <p>{client.notes}</p>
+                                        </div>
+                                        <div>
+                                            <strong>Space Needs:</strong>
+                                            <ul>
+                                                {spaceList.map((need, index) => (
+                                                    <li key={index}>{need}</li>
+                                                ))}
+                                            </ul>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                </>)
+                                : 
+                                (<>
+                                <div className="details-section">
                                 <h4>Products & Licenses</h4>
                                 <div className="details-lists">
                                     <div>
@@ -136,7 +163,7 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
                                     </div>
                                     <div>
                                         <strong>Licenses:</strong>
-                                        <ul className="license-list">
+                                        <ul>
                                             {licensesList.map((license, index) => (
                                                 <li key={index}>
                                                     {license.name}: {license.status ? '✅' : '❌'}
@@ -147,10 +174,79 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
                                 </div>
                             </div>
 
+
                             <div className="details-section full-width">
+                                <h4>Requirements</h4>
+                                <div className="details-lists">
+                                    <div>
+                                        <strong>Additional Notes</strong>
+                                        <p>{client.notes}</p>
+                                    </div>
+                                    <div>
+                                        <strong>Space Needs:</strong>
+                                        <ul>
+                                            {spaceList.map((need, index) => (
+                                                <li key={index}>{need}</li>
+                                            ))}
+                                        </ul>
+
+                                    </div>
+                                </div>
+                            </div></>)}
+
+
+                            {/* <div className="details-section">
+                                <h4>Products & Licenses</h4>
+                                <div className="details-lists">
+                                    <div>
+                                        <strong>Products:</strong>
+                                        <ul>
+                                            {productsList.map((product, index) => (
+                                                <li key={index}>{product}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <strong>Licenses:</strong>
+                                        <ul>
+                                            {licensesList.map((license, index) => (
+                                                <li key={index}>
+                                                    {license.name}: {license.status ? '✅' : '❌'}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div className="details-section">
+                                <h4>Requirements</h4>
+                                <div className="details-lists">
+                                    <div>
+                                        <strong>Additional Notes</strong>
+                                        <p>{client.notes}</p>
+                                    </div>
+                                    <div>
+                                        <strong>Space Needs:</strong>
+                                        <ul>
+                                            {spaceList.map((need, index) => (
+                                                <li key={index}>{need}</li>
+                                            ))}
+                                        </ul>
+
+                                    </div>
+                                </div>
+                            </div> */}
+
+
+
+
+
+                            {/* <div className="details-section full-width">
                                 <h4>Additional Notes</h4>
                                 <p>{client.notes}</p>
-                            </div>
+                            </div> */}
                         </div>
                     </td>
                 </tr>
