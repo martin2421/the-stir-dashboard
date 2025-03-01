@@ -199,11 +199,13 @@ export default function Table() {
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error.message}</div>;
 
-    const filteredClients = clients.filter(client =>
-        Object.values(client).some(value =>
-            String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
+    const filteredClients = clients
+        .filter(client => client.id !== -1) // Filter out the special entry
+        .filter(client =>
+            Object.values(client).some(value =>
+                String(value).toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        );
 
     const toggleDetails = (clientId) => {
         setExpandedRows(prev => {
