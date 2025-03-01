@@ -91,3 +91,66 @@ th {
     margin: 0 20px;
     align-self: stretch;
 }
+
+.service-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.details-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.details-section.full-width {
+    grid-column: 1 / -1;
+}
+
+.details-section h4 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.details-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.details-section ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.details-section li {
+    margin-bottom: 4px;
+}
+
+.details-section p {
+    margin: 8px 0;
+}
+
+.license-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 8px 0;
+}
+
+.license-list li {
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
