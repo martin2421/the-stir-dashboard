@@ -2,7 +2,64 @@ import './Table.css';
 import React, { useState } from 'react';
 import { useClientData } from './hooks/useClientData';
 
-const TableRow = ({ client, isExpanded, onToggle }) => {
+const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedClient, setEditedClient] = useState({ ...client });
+
+    const handleEdit = () => {
+        if (isEditing) {
+            onSave(editedClient);
+        }
+        setIsEditing(!isEditing);
+    };
+
+    const handleChange = (field, value, isArray = false, isLicense = false) => {
+        setEditedClient(prev => {
+            let processedValue = value;
+
+            if (isArray) {
+                // Handle array fields (services, products)
+                if (typeof value === 'string') {
+                    processedValue = value.split(',').map(item => item.trim()).filter(item => item !== '');
+                } else if (!Array.isArray(value)) {
+                    processedValue = [];
+                }
+            } else if (isLicense) {
+                processedValue = JSON.stringify(value);
+            } else if (field === 'signedUp') {
+                processedValue = Boolean(value); // Ensure boolean value
+            } else if (field === 'createdAt' && value) {
+                processedValue = new Date(value).toISOString(); // Ensure proper date format
+            }
+
+            return {
+                ...prev,
+                [field]: processedValue,
+                // Keep existing eventVenue handling
+                eventVenue: field === 'venue_location' || field === 'venue_capacity'
+                    ? JSON.stringify({
+                        ...JSON.parse(prev.eventVenue || '{"venue_location":"","venue_capacity":""}'),
+                        [field.replace('venue_', '')]: value
+                    })
+                    : prev.eventVenue
+            };
+        });
+    };
+
+    const handleLicenseChange = (licenseName, status) => {
+        const currentLicenses = editedClient.licenses
+            ? JSON.parse(editedClient.licenses)
+            : {};
+
+        setEditedClient(prev => ({
+            ...prev,
+            licenses: JSON.stringify({
+                ...currentLicenses,
+                [licenseName]: status
+            })
+        }));
+    };
 
     const parseList = (items) => {
         if (!items) return [];
@@ -51,7 +108,7 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
 
     return (
         <>
-            <tr>
+            {/* <tr>
                 <td>{`${client.firstName} ${client.lastName}`}</td>
                 <td>{client.businessName}</td>
                 <td>{client.email}</td>
@@ -68,56 +125,228 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
                         {isExpanded ? 'Hide Details' : 'View Details'}
                     </button>
                 </td>
+            </tr> */}
+
+            <tr>
+                <td>
+                    {isEditing ? (
+                        <div className="edit-field">
+                            <input
+                                value={editedClient.firstName || ''}
+                                onChange={(e) => handleChange('firstName', e.target.value)}
+                                placeholder="First Name"
+                            />
+                            <input
+                                value={editedClient.lastName || ''}
+                                onChange={(e) => handleChange('lastName', e.target.value)}
+                                placeholder="Last Name"
+                            />
+                        </div>
+                    ) : (
+                        `${client.firstName} ${client.lastName}`
+                    )}
+                </td>
+                <td>
+                    {isEditing ? (
+                        <input
+                            value={editedClient.businessName || ''}
+                            onChange={(e) => handleChange('businessName', e.target.value)}
+                        />
+                    ) : (
+                        client.businessName
+                    )}
+                </td>
+                <td>
+                    {isEditing ? (
+                        <input
+                            value={editedClient.email || ''}
+                            onChange={(e) => handleChange('email', e.target.value)}
+                            type="email"
+                        />
+                    ) : (
+                        client.email
+                    )}
+                </td>
+                <td>
+                    {isEditing ? (
+                        <input
+                            value={editedClient.phoneNumber || ''}
+                            onChange={(e) => handleChange('phoneNumber', e.target.value)}
+                        />
+                    ) : (
+                        formatPhoneNumber(client.phoneNumber)
+                    )}
+                </td>
+                <td>
+                    {isEditing ? (
+                        <input
+                            value={Array.isArray(editedClient.services)
+                                ? editedClient.services.join(', ')
+                                : editedClient.services || ''}
+                            onChange={(e) => handleChange('services', e.target.value, true)}
+                            placeholder="Service 1, Service 2, ..."
+                        />
+                    ) : (
+                        <ul className="service-list">
+                            {servicesList.map((service, index) => (
+                                <li key={index}>{service}</li>
+                            ))}
+                        </ul>
+                    )}
+                </td>
+                <td>
+                    <div className="button-group">
+                        <button className="expand-btn" onClick={onToggle}>
+                            {isExpanded ? 'Hide Details' : 'View Details'}
+                        </button>
+                        <button
+                            className={`edit-btn ${isEditing ? 'save-mode' : ''}`}
+                            onClick={handleEdit}
+                        >
+                            {isEditing ? 'Save' : 'Edit'}
+                        </button>
+                    </div>
+                </td>
             </tr>
+
+
+
             {isExpanded && (
                 <tr className="details-row">
                     <td colSpan="6">
                         <div className="details-grid">
                             <div className="details-section">
                                 <h4>Business Information</h4>
-                                <p><strong>Business Stage:</strong> {client.businessStage}</p>
-                                <p><strong>Created At:</strong> {new Date(client.createdAt).toLocaleDateString()}</p>
-                                <p><strong>Signed Up:</strong> {new Date(client.signedUp).toLocaleDateString()}</p>
+                                <p>
+                                    <strong>Business Stage:</strong>{' '}
+                                    {isEditing ? (
+                                        <input
+                                            value={editedClient.businessStage || ''}
+                                            onChange={(e) => handleChange('businessStage', e.target.value)}
+                                        />
+                                    ) : (
+                                        client.businessStage
+                                    )}
+                                </p>
+                                <p>
+                                    <strong>Created At:</strong>{' '}
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={editedClient.createdAt
+                                                ? new Date(editedClient.createdAt).toISOString().split('T')[0]
+                                                : new Date().toISOString().split('T')[0]}
+                                            onChange={(e) => handleChange('createdAt', e.target.value)}
+                                        />
+                                    ) : (
+                                        client.createdAt
+                                            ? new Date(client.createdAt).toLocaleDateString()
+                                            : new Date().toLocaleDateString()
+                                    )}
+                                </p>
+                                <p>
+                                    <strong>Signed Up:</strong>{' '}
+                                    {isEditing ? (
+                                        <input
+                                            type="checkbox"
+                                            checked={editedClient.signedUp || false}
+                                            onChange={(e) => handleChange('signedUp', e.target.checked)}
+                                        />
+                                    ) : (
+                                        client.signedUp ? '✅' : '❌'
+                                    )}
+                                </p>
                             </div>
 
                             {servicesList.includes('Event Venue') ? (
                                 <>
                                     <div className="details-section">
                                         <h4>Event Details</h4>
-                                        <p><strong>Venue Location:</strong> {
-                                            client.eventVenue ?
-                                                typeof client.eventVenue === 'string' ?
-                                                    JSON.parse(client.eventVenue).venue_location :
-                                                    client.eventVenue.venue_location
-                                                : 'Not specified'
-                                        }</p>
-                                        <p><strong>Venue Capacity:</strong> {
-                                            client.eventVenue ?
-                                                typeof client.eventVenue === 'string' ?
-                                                    JSON.parse(client.eventVenue).venue_capacity :
-                                                    client.eventVenue.venue_capacity
-                                                : 'Not specified'
-                                        }</p>
-                                        <p><strong>Venue Times:</strong> {client.eventVenueTimes || 'Not specified'}</p>
+                                        <p>
+                                            <strong>Venue Location:</strong>{' '}
+                                            {isEditing ? (
+                                                <input
+                                                    value={JSON.parse(editedClient.eventVenue || '{"venue_location":""}').venue_location}
+                                                    onChange={(e) => handleChange('venue_location', e.target.value)}
+                                                />
+                                            ) : (
+                                                client.eventVenue ? JSON.parse(client.eventVenue).venue_location : 'Not specified'
+                                            )}
+                                        </p>
+                                        <p>
+                                            <strong>Venue Capacity:</strong>{' '}
+                                            {isEditing ? (
+                                                <input
+                                                    value={JSON.parse(editedClient.eventVenue || '{"venue_capacity":""}').venue_capacity}
+                                                    onChange={(e) => handleChange('venue_capacity', e.target.value)}
+                                                />
+                                            ) : (
+                                                client.eventVenue ? JSON.parse(client.eventVenue).venue_capacity : 'Not specified'
+                                            )}
+                                        </p>
+                                        <p>
+                                            <strong>Venue Times:</strong>{' '}
+                                            {isEditing ? (
+                                                <input
+                                                    value={editedClient.eventVenueTimes || ''}
+                                                    onChange={(e) => handleChange('eventVenueTimes', e.target.value)}
+                                                />
+                                            ) : (
+                                                client.eventVenueTimes || 'Not specified'
+                                            )}
+                                        </p>
                                     </div>
+                                    {/* 
+                                        </>
+                                    ) : null }
+                                    */}
 
                                     <div className="details-section">
                                         <h4>Products & Licenses</h4>
                                         <div className="details-lists">
                                             <div>
                                                 <strong>Products:</strong>
-                                                <ul>
-                                                    {productsList.map((product, index) => (
-                                                        <li key={index}>{product}</li>
-                                                    ))}
-                                                </ul>
+                                                {isEditing ? (
+                                                    <input
+                                                        value={Array.isArray(editedClient.products)
+                                                            ? editedClient.products.join(', ')
+                                                            : typeof editedClient.products === 'string'
+                                                                ? editedClient.products
+                                                                : ''}
+                                                        onChange={(e) => handleChange('products', e.target.value, true)}
+                                                        placeholder="Product 1, Product 2, ..."
+                                                    />
+                                                ) : (
+                                                    <ul>
+                                                        {(Array.isArray(client.products)
+                                                            ? client.products
+                                                            : typeof client.products === 'string'
+                                                                ? client.products.split(',').map(p => p.trim())
+                                                                : []
+                                                        ).map((product, index) => (
+                                                            <li key={index}>{product}</li>
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </div>
                                             <div>
                                                 <strong>Licenses:</strong>
                                                 <ul>
                                                     {licensesList.map((license, index) => (
                                                         <li key={index}>
-                                                            {license.name}: {license.status ? '✅' : '❌'}
+                                                            {license.name}:{' '}
+                                                            {isEditing ? (
+                                                                <label className="license-toggle">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={license.status}
+                                                                        onChange={(e) => handleLicenseChange(license.name, e.target.checked)}
+                                                                    />
+                                                                    {license.status ? '✅' : '❌'}
+                                                                </label>
+                                                            ) : (
+                                                                license.status ? '✅' : '❌'
+                                                            )}
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -131,12 +360,26 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
                                         <div className="details-lists">
                                             <div>
                                                 <strong>Additional Notes</strong>
-                                                <p>{client.notes}</p>
+                                                {isEditing ? (
+                                                    <textarea
+                                                        value={editedClient.notes || ''}
+                                                        onChange={(e) => handleChange('notes', e.target.value)}
+                                                        rows={4}
+                                                    />
+                                                ) : (
+                                                    <p>{client.notes || 'No additional notes'}</p>
+                                                )}
                                             </div>
                                             <div>
                                                 <strong>Space Needs:</strong>
-                                                <p>{client.spaceNeeds || 'Not specified'}</p>
-
+                                                {isEditing ? (
+                                                    <input
+                                                        value={editedClient.spaceNeeds || ''}
+                                                        onChange={(e) => handleChange('spaceNeeds', e.target.value)}
+                                                    />
+                                                ) : (
+                                                    <p>{client.spaceNeeds || 'Not specified'}</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -192,9 +435,17 @@ const TableRow = ({ client, isExpanded, onToggle }) => {
 };
 
 export default function Table() {
-    const { clients, loading, error } = useClientData();
+    const { clients, loading, error, updateClient } = useClientData();
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedRows, setExpandedRows] = useState(new Set());
+
+    const handleSaveClient = async (updatedClient) => {
+        try {
+            await updateClient(updatedClient);
+        } catch (error) {
+            console.error('Error updating client:', error);
+        }
+    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error.message}</div>;
@@ -253,6 +504,7 @@ export default function Table() {
                             client={client}
                             isExpanded={expandedRows.has(client.id)}
                             onToggle={() => toggleDetails(client.id)}
+                            onSave={handleSaveClient}
                         />
                     ))}
                 </tbody>

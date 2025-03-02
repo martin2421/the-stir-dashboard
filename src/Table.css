@@ -156,3 +156,98 @@ th {
     align-items: center;
     gap: 8px;
 }
+
+.button-group {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: black;
+}
+
+.edit-btn.save-mode {
+    background-color: #4CAF50;
+    color: black;
+    border-color: #4CAF50;
+}
+
+.edit-field {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-field input {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+}
+
+td input {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.details-section textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 4px;
+    font-family: inherit;
+}
+
+.details-section input {
+    width: calc(100% - 16px);
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.details-lists input,
+.details-lists textarea {
+    margin-top: 8px;
+    display: block;
+}
+
+.license-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.license-toggle input[type="checkbox"] {
+    margin: 0;
+}
+
+.details-lists input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+input[type="date"] {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.details-section input[type="checkbox"] {
+    margin-left: 8px;
+    width: auto;
+    cursor: pointer;
+}
