@@ -1,6 +1,6 @@
 # Instructions
 
-- Download localy with GitHub Desktop
+- Download locally with GitHub Desktop
 - npm install
 - npm install aws-sdk
 - npm install @aws-sdk/client-dynamodb
