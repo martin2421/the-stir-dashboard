@@ -496,7 +496,7 @@ export default function Table() {
     const handleSaveClient = async (updatedClient) => {
         try {
             await updateClient(updatedClient);
-            alert(`${client.firstName} ${client.lastName} has been archived.`);
+            // alert(`${updatedClient.firstName} ${updatedClient.lastName}'s information has been updated.`);
         } catch (error) {
             alert(`Error archiving client: ${error.message}`);
         }

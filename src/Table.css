@@ -205,7 +205,7 @@ th {
 
 .button-group {
     display: flex;
-    gap: 5px;
+    gap: 8px;
     justify-content: center;
 }
 
@@ -217,12 +217,14 @@ th {
     cursor: pointer;
     transition: all 0.3s ease;
     color: black;
+    margin-right: 8px;
 }
 
 .edit-btn.save-mode {
     background-color: #4CAF50;
     color: black;
     border-color: #4CAF50;
+    margin-right: 8px;
 }
 
 .edit-field {
