@@ -256,3 +256,18 @@ input[type="date"] {
     width: auto;
     cursor: pointer;
 }
+
+.results-count {
+    margin: 10px 0;
+    font-size: 14px;
+    color: #666;
+    text-align: left;
+}
+
+/* If you want it to stand out a bit more */
+.results-count {
+    background-color: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+}

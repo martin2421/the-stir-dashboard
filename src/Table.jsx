@@ -14,6 +14,24 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
         setIsEditing(!isEditing);
     };
 
+    const handleEventVenueChange = (field, value) => {
+        setEditedClient(prev => {
+            // Parse the current eventVenue or create a new object
+            const currentVenue = prev.eventVenue
+                ? JSON.parse(prev.eventVenue)
+                : { venue_location: '', venue_capacity: '' };
+
+            // Update the specific field
+            currentVenue[field] = value;
+
+            // Return updated state with new JSON string
+            return {
+                ...prev,
+                eventVenue: JSON.stringify(currentVenue)
+            };
+        });
+    };
+
     const handleChange = (field, value, isArray = false, isLicense = false) => {
         setEditedClient(prev => {
             let processedValue = value;
@@ -25,23 +43,40 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                 } else if (!Array.isArray(value)) {
                     processedValue = [];
                 }
+
+                // Don't stringify arrays for services and products
+                if (field === 'products' || field === 'services') {
+                    // Keep as actual array, not string representation
+                    return {
+                        ...prev,
+                        [field]: processedValue
+                    };
+                }
             } else if (isLicense) {
                 processedValue = JSON.stringify(value);
-            } else if (field === 'signedUp') {
-                processedValue = Boolean(value); // Ensure boolean value
-            } else if (field === 'createdAt' && value) {
-                processedValue = new Date(value).toISOString(); // Ensure proper date format
+            } else if ((field === 'createdAt' || field === 'dateSignedUp') && value) {
+                // Process date fields
+                processedValue = new Date(value).toISOString();
+            } else if (field === 'venue_location' || field === 'venue_capacity') {
+                try {
+                    const eventVenue = prev.eventVenue
+                        ? JSON.parse(prev.eventVenue)
+                        : { venue_location: '', venue_capacity: '' };
+                    eventVenue[field.replace('venue_', '')] = value;
+                    processedValue = JSON.stringify(eventVenue);
+                } catch (err) {
+                    console.error('Error parsing eventVenue:', err);
+                    const eventVenue = { venue_location: '', venue_capacity: '' };
+                    eventVenue[field.replace('venue_', '')] = value;
+                    processedValue = JSON.stringify(eventVenue);
+                }
             }
 
             return {
                 ...prev,
                 [field]: processedValue,
-                // Keep existing eventVenue handling
                 eventVenue: field === 'venue_location' || field === 'venue_capacity'
-                    ? JSON.stringify({
-                        ...JSON.parse(prev.eventVenue || '{"venue_location":"","venue_capacity":""}'),
-                        [field.replace('venue_', '')]: value
-                    })
+                    ? processedValue
                     : prev.eventVenue
             };
         });
@@ -182,7 +217,9 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                         <input
                             value={Array.isArray(editedClient.services)
                                 ? editedClient.services.join(', ')
-                                : editedClient.services || ''}
+                                : typeof editedClient.services === 'string'
+                                    ? editedClient.services
+                                    : ''}
                             onChange={(e) => handleChange('services', e.target.value, true)}
                             placeholder="Service 1, Service 2, ..."
                         />
@@ -229,7 +266,7 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                                     )}
                                 </p>
                                 <p>
-                                    <strong>Created At:</strong>{' '}
+                                    <strong>Account Created At:</strong>{' '}
                                     {isEditing ? (
                                         <input
                                             type="date"
@@ -245,15 +282,19 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                                     )}
                                 </p>
                                 <p>
-                                    <strong>Signed Up:</strong>{' '}
+                                    <strong>Date Signed up as Stir Member:</strong>{' '}
                                     {isEditing ? (
                                         <input
-                                            type="checkbox"
-                                            checked={editedClient.signedUp || false}
-                                            onChange={(e) => handleChange('signedUp', e.target.checked)}
+                                            type="date"
+                                            value={editedClient.dateSignedUp
+                                                ? new Date(editedClient.dateSignedUp).toISOString().split('T')[0]
+                                                : ''}
+                                            onChange={(e) => handleChange('dateSignedUp', e.target.value)}
                                         />
                                     ) : (
-                                        client.signedUp ? '✅' : '❌'
+                                        client.dateSignedUp
+                                            ? new Date(client.dateSignedUp).toLocaleDateString()
+                                            : 'Not specified'
                                     )}
                                 </p>
                             </div>
@@ -266,40 +307,33 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                                             <strong>Venue Location:</strong>{' '}
                                             {isEditing ? (
                                                 <input
-                                                    value={JSON.parse(editedClient.eventVenue || '{"venue_location":""}').venue_location}
-                                                    onChange={(e) => handleChange('venue_location', e.target.value)}
+                                                    value={editedClient.eventVenue
+                                                        ? JSON.parse(editedClient.eventVenue).venue_location || ''
+                                                        : ''}
+                                                    onChange={(e) => handleEventVenueChange('venue_location', e.target.value)}
                                                 />
                                             ) : (
-                                                client.eventVenue ? JSON.parse(client.eventVenue).venue_location : 'Not specified'
+                                                client.eventVenue
+                                                    ? JSON.parse(client.eventVenue).venue_location || 'Not specified'
+                                                    : 'Not specified'
                                             )}
                                         </p>
                                         <p>
                                             <strong>Venue Capacity:</strong>{' '}
                                             {isEditing ? (
                                                 <input
-                                                    value={JSON.parse(editedClient.eventVenue || '{"venue_capacity":""}').venue_capacity}
-                                                    onChange={(e) => handleChange('venue_capacity', e.target.value)}
+                                                    value={editedClient.eventVenue
+                                                        ? JSON.parse(editedClient.eventVenue).venue_capacity || ''
+                                                        : ''}
+                                                    onChange={(e) => handleEventVenueChange('venue_capacity', e.target.value)}
                                                 />
                                             ) : (
-                                                client.eventVenue ? JSON.parse(client.eventVenue).venue_capacity : 'Not specified'
-                                            )}
-                                        </p>
-                                        <p>
-                                            <strong>Venue Times:</strong>{' '}
-                                            {isEditing ? (
-                                                <input
-                                                    value={editedClient.eventVenueTimes || ''}
-                                                    onChange={(e) => handleChange('eventVenueTimes', e.target.value)}
-                                                />
-                                            ) : (
-                                                client.eventVenueTimes || 'Not specified'
+                                                client.eventVenue
+                                                    ? JSON.parse(client.eventVenue).venue_capacity || 'Not specified'
+                                                    : 'Not specified'
                                             )}
                                         </p>
                                     </div>
-                                    {/* 
-                                        </>
-                                    ) : null }
-                                    */}
 
                                     <div className="details-section">
                                         <h4>Products & Licenses</h4>
@@ -311,7 +345,9 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                                                         value={Array.isArray(editedClient.products)
                                                             ? editedClient.products.join(', ')
                                                             : typeof editedClient.products === 'string'
-                                                                ? editedClient.products
+                                                                ? editedClient.products.startsWith('[')
+                                                                    ? JSON.parse(editedClient.products).join(', ')
+                                                                    : editedClient.products
                                                                 : ''}
                                                         onChange={(e) => handleChange('products', e.target.value, true)}
                                                         placeholder="Product 1, Product 2, ..."
@@ -321,7 +357,9 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                                                         {(Array.isArray(client.products)
                                                             ? client.products
                                                             : typeof client.products === 'string'
-                                                                ? client.products.split(',').map(p => p.trim())
+                                                                ? client.products.startsWith('[')
+                                                                    ? JSON.parse(client.products)
+                                                                    : client.products.split(',').map(p => p.trim())
                                                                 : []
                                                         ).map((product, index) => (
                                                             <li key={index}>{product}</li>
@@ -486,6 +524,15 @@ export default function Table() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search for names, services, or requirements..."
             />
+            <br />
+            <div className="results-count">
+                {filteredClients.length === 1
+                    ? "1 client found"
+                    : `${filteredClients.length} prospects found`}
+                {searchTerm && clients.filter(client => client.id !== -1).length !== filteredClients.length &&
+                    ` (from ${clients.filter(client => client.id !== -1).length} total)`}
+            </div>
+
             <table>
                 <thead>
                     <tr>

@@ -32,40 +32,60 @@ export const useClientData = () => {
         }
     };
 
+    // In useClientData.js
     const updateClient = async (updatedClient) => {
+        // Make a copy to avoid mutating the original object
+        const clientToUpdate = { ...updatedClient };
+
+        // Ensure products and services are handled properly
+        if (Array.isArray(clientToUpdate.products)) {
+            // Keep as array, no need to stringify
+        } else if (typeof clientToUpdate.products === 'string' && clientToUpdate.products.startsWith('[')) {
+            try {
+                clientToUpdate.products = JSON.parse(clientToUpdate.products);
+            } catch (e) {
+                // If can't parse, split by commas
+                clientToUpdate.products = clientToUpdate.products.split(',').map(p => p.trim());
+            }
+        }
+
+        if (Array.isArray(clientToUpdate.services)) {
+            // Keep as array, no need to stringify
+        } else if (typeof clientToUpdate.services === 'string' && !clientToUpdate.services.startsWith('[')) {
+            clientToUpdate.services = clientToUpdate.services.split(',').map(s => s.trim());
+        }
+
         const params = {
             TableName: 'stir-test2',
             Key: {
-                id: updatedClient.id
+                id: clientToUpdate.id
             },
             UpdateExpression: 'set firstName = :fn, lastName = :ln, businessName = :bn, ' +
                 'email = :e, phoneNumber = :p, businessStage = :bs, eventVenue = :ev, ' +
-                'eventVenueTimes = :evt, notes = :n, spaceNeeds = :sn, services = :sv, ' +
-                'products = :pr, licenses = :lc, createdAt = :ca, signedUp = :su',
+                'notes = :n, spaceNeeds = :sn, services = :sv, ' +
+                'products = :pr, licenses = :lc, createdAt = :ca, dateSignedUp = :dsu',
             ExpressionAttributeValues: {
-                ':fn': updatedClient.firstName,
-                ':ln': updatedClient.lastName,
-                ':bn': updatedClient.businessName,
-                ':e': updatedClient.email,
-                ':p': updatedClient.phoneNumber,
-                ':bs': updatedClient.businessStage,
-                ':ev': updatedClient.eventVenue,
-                ':evt': updatedClient.eventVenueTimes,
-                ':n': updatedClient.notes,
-                ':sn': updatedClient.spaceNeeds,
-                ':sv': updatedClient.services,
-                ':pr': updatedClient.products,
-                ':lc': updatedClient.licenses,
-                ':ca': updatedClient.createdAt,
-                ':su': updatedClient.signedUp
+                ':fn': clientToUpdate.firstName,
+                ':ln': clientToUpdate.lastName,
+                ':bn': clientToUpdate.businessName,
+                ':e': clientToUpdate.email,
+                ':p': clientToUpdate.phoneNumber,
+                ':bs': clientToUpdate.businessStage,
+                ':ev': clientToUpdate.eventVenue,
+                ':n': clientToUpdate.notes,
+                ':sn': clientToUpdate.spaceNeeds,
+                ':sv': clientToUpdate.services,
+                ':pr': clientToUpdate.products,
+                ':lc': clientToUpdate.licenses,
+                ':ca': clientToUpdate.createdAt,
+                ':dsu': clientToUpdate.dateSignedUp,
             },
             ReturnValues: 'UPDATED_NEW'
         };
 
         try {
             await dynamoDB.update(params).promise();
-            // Refresh the clients list after update
-            await fetchClients();
+            await fetchClients();  // Refresh data after update
         } catch (error) {
             console.error('Error updating client:', error);
             throw error;
