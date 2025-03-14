@@ -2,7 +2,7 @@ import './Table.css';
 import React, { useState } from 'react';
 import { useClientData } from './hooks/useClientData';
 
-const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
+const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived }) => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedClient, setEditedClient] = useState({ ...client });
@@ -12,6 +12,12 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
             onSave(editedClient);
         }
         setIsEditing(!isEditing);
+    };
+
+    const handleArchive = () => {
+        if (window.confirm('Are you sure you want to archive this prospect?')) {
+            onArchive(client);
+        }
     };
 
     const handleEventVenueChange = (field, value) => {
@@ -242,6 +248,15 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
                         >
                             {isEditing ? 'Save' : 'Edit'}
                         </button>
+                        {!isEditing && !isArchived && (
+                            <button
+                                className="archive-btn"
+                                onClick={handleArchive}
+                                title="Archive this prospect"
+                            >
+                                Archive
+                            </button>
+                        )}
                     </div>
                 </td>
             </tr>
@@ -473,22 +488,36 @@ const TableRow = ({ client, isExpanded, onToggle, onSave }) => {
 };
 
 export default function Table() {
-    const { clients, loading, error, updateClient } = useClientData();
+    const { clients, archivedClients, loading, error, updateClient, archiveClient } = useClientData();
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedRows, setExpandedRows] = useState(new Set());
+    const [showArchived, setShowArchived] = useState(false);
 
     const handleSaveClient = async (updatedClient) => {
         try {
             await updateClient(updatedClient);
+            alert(`${client.firstName} ${client.lastName} has been archived.`);
         } catch (error) {
-            console.error('Error updating client:', error);
+            alert(`Error archiving client: ${error.message}`);
+        }
+    };
+
+    const handleArchive = async (client) => {
+        try {
+            await archiveClient(client);
+            alert(`${client.firstName} ${client.lastName} has been archived.`);
+        } catch (error) {
+            alert(`Error archiving client: ${error.message}`);
         }
     };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error.message}</div>;
 
-    const filteredClients = clients
+    // Choose which dataset to use based on showArchived state
+    const dataToDisplay = showArchived ? archivedClients : clients;
+
+    const filteredClients = dataToDisplay
         .filter(client => client.id !== -1) // Filter out the special entry
         .filter(client =>
             Object.values(client).some(value =>
@@ -515,7 +544,16 @@ export default function Table() {
                 className="logo"
                 alt="Logo"
             />
-            <h2>Client Data Table</h2>
+
+            <button
+                className="archive-toggle-btn"
+                onClick={() => setShowArchived(!showArchived)}
+            >
+                {showArchived ? 'View Current' : 'View Archived'}
+            </button>
+
+            <h2>{showArchived ? 'Archived Prospects' : 'Prospects Data Table'}</h2>
+
             <input
                 type="text"
                 id="searchInput"
@@ -528,9 +566,9 @@ export default function Table() {
             <div className="results-count">
                 {filteredClients.length === 1
                     ? "1 client found"
-                    : `${filteredClients.length} prospects found`}
-                {searchTerm && clients.filter(client => client.id !== -1).length !== filteredClients.length &&
-                    ` (from ${clients.filter(client => client.id !== -1).length} total)`}
+                    : `${filteredClients.length} ${showArchived ? 'archived' : ''} prospects found`}
+                {searchTerm && dataToDisplay.filter(client => client.id !== -1).length !== filteredClients.length &&
+                    ` (from ${dataToDisplay.filter(client => client.id !== -1).length} total)`}
             </div>
 
             <table>
@@ -552,6 +590,8 @@ export default function Table() {
                             isExpanded={expandedRows.has(client.id)}
                             onToggle={() => toggleDetails(client.id)}
                             onSave={handleSaveClient}
+                            onArchive={handleArchive}
+                            isArchived={showArchived}
                         />
                     ))}
                 </tbody>

@@ -162,9 +162,51 @@ th {
     gap: 8px;
 }
 
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.archive-toggle-btn {
+    background-color: #346cb0;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: 600;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.archive-toggle-btn:hover {
+    background-color: #275a98;
+}
+
+.archive-btn {
+    background-color: #dd6b55;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+    font-size: 13px;
+}
+
+.archive-btn:hover {
+    background-color: #c55b47;
+}
+
 .button-group {
     display: flex;
-    gap: 8px;
+    gap: 5px;
+    justify-content: center;
 }
 
 .edit-btn {

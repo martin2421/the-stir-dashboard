@@ -16,6 +16,7 @@ export const useClientData = () => {
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [archivedClients, setArchivedClients] = useState([]);
 
     const fetchClients = async () => {
         try {
@@ -25,6 +26,21 @@ export const useClientData = () => {
             };
             const result = await dynamoDB.scan(params).promise();
             setClients(result.Items);
+            setLoading(false);
+        } catch (err) {
+            setError(err);
+            setLoading(false);
+        }
+    };
+
+    const fetchArchivedClients = async () => {
+        try {
+            setLoading(true);
+            const params = {
+                TableName: 'stir-archived'
+            };
+            const result = await dynamoDB.scan(params).promise();
+            setArchivedClients(result.Items);
             setLoading(false);
         } catch (err) {
             setError(err);
@@ -92,10 +108,53 @@ export const useClientData = () => {
         }
     };
 
+    const archiveClient = async (client) => {
+        try {
+            // Step 1: Add the client to the archive table
+            const archiveParams = {
+                TableName: 'stir-archived',
+                Item: client
+            };
+
+            await dynamoDB.put(archiveParams).promise();
+
+            // Step 2: Delete client from the main table
+            const deleteParams = {
+                TableName: 'stir-test2',
+                Key: {
+                    id: client.id
+                }
+            };
+
+            await dynamoDB.delete(deleteParams).promise();
+
+            // Step 3: Refresh the clients list
+            await fetchClients();
+
+            return true;
+        } catch (error) {
+            console.error('Error archiving client:', error);
+            throw error;
+        }
+    };
+
     // Call fetchClients when component mounts
     useEffect(() => {
-        fetchClients();
+        const fetchAllData = async () => {
+            await fetchClients();
+            await fetchArchivedClients();
+        };
+        fetchAllData();
     }, []);
 
-    return { clients, loading, error, updateClient };
+    return { 
+        clients, 
+        archivedClients, 
+        loading, 
+        error, 
+        updateClient, 
+        archiveClient,
+        fetchClients,
+        fetchArchivedClients
+    };
 };
