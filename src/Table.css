@@ -206,7 +206,7 @@ th {
 .button-group {
     display: flex;
     gap: 8px;
-    justify-content: center;
+    justify-content: start;
 }
 
 .edit-btn {
