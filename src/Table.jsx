@@ -592,6 +592,13 @@ export default function Table() {
 
                 <div className="date-filter">
                     <span>Filter by Stir membership date:</span>
+
+                    <div className="date-filter-labels">
+                        <p>Start</p>
+                        <p>End</p>
+                    </div>
+
+
                     <div className="date-inputs">
                         <input
                             type="date"
@@ -599,7 +606,7 @@ export default function Table() {
                             onChange={(e) => setDateRangeStart(e.target.value)}
                             placeholder="Start date"
                         />
-                        <span>to</span>
+                        {/* <span>to</span> */}
                         <input
                             type="date"
                             value={dateRangeEnd}
