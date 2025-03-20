@@ -492,6 +492,8 @@ export default function Table() {
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedRows, setExpandedRows] = useState(new Set());
     const [showArchived, setShowArchived] = useState(false);
+    const [dateRangeStart, setDateRangeStart] = useState('');
+    const [dateRangeEnd, setDateRangeEnd] = useState('');
 
     const handleSaveClient = async (updatedClient) => {
         try {
@@ -523,7 +525,29 @@ export default function Table() {
             Object.values(client).some(value =>
                 String(value).toLowerCase().includes(searchTerm.toLowerCase())
             )
-        );
+        )
+        .filter(client => {
+            // If no date range is specified, include all clients
+            if (!dateRangeStart && !dateRangeEnd) return true;
+
+            // If client doesn't have a dateSignedUp, only include if not filtering by dates
+            if (!client.dateSignedUp) return !dateRangeStart && !dateRangeEnd;
+
+            const clientDate = new Date(client.dateSignedUp);
+
+            // Filter by start date if specified
+            if (dateRangeStart && !dateRangeEnd) {
+                return clientDate >= new Date(dateRangeStart);
+            }
+
+            // Filter by end date if specified
+            if (!dateRangeStart && dateRangeEnd) {
+                return clientDate <= new Date(dateRangeEnd);
+            }
+
+            // Filter by date range if both are specified
+            return clientDate >= new Date(dateRangeStart) && clientDate <= new Date(dateRangeEnd);
+        });
 
     const toggleDetails = (clientId) => {
         setExpandedRows(prev => {
@@ -554,20 +578,57 @@ export default function Table() {
 
             <h2>{showArchived ? 'Archived Prospects' : 'Prospects Data Table'}</h2>
 
-            <input
-                type="text"
-                id="searchInput"
-                className='search-input'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for names, services, or requirements..."
-            />
+            <div className="filter-container">
+                <div className="search-container">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        className='search-input'
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search for names, services, or requirements..."
+                    />
+                </div>
+
+                <div className="date-filter">
+                    <span>Filter by Stir membership date:</span>
+                    <div className="date-inputs">
+                        <input
+                            type="date"
+                            value={dateRangeStart}
+                            onChange={(e) => setDateRangeStart(e.target.value)}
+                            placeholder="Start date"
+                        />
+                        <span>to</span>
+                        <input
+                            type="date"
+                            value={dateRangeEnd}
+                            onChange={(e) => setDateRangeEnd(e.target.value)}
+                            placeholder="End date"
+                        />
+                        {(dateRangeStart || dateRangeEnd) && (
+                            <button
+                                className="clear-dates-btn"
+                                onClick={() => {
+                                    setDateRangeStart('');
+                                    setDateRangeEnd('');
+                                }}
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             <br />
+
             <div className="results-count">
                 {filteredClients.length === 1
                     ? "1 client found"
                     : `${filteredClients.length} ${showArchived ? 'archived' : ''} prospects found`}
-                {searchTerm && dataToDisplay.filter(client => client.id !== -1).length !== filteredClients.length &&
+                {(searchTerm || dateRangeStart || dateRangeEnd) &&
+                    dataToDisplay.filter(client => client.id !== -1).length !== filteredClients.length &&
                     ` (from ${dataToDisplay.filter(client => client.id !== -1).length} total)`}
             </div>
 
