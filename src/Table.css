@@ -5,11 +5,13 @@ body {
     margin: 0;
     padding: 20px;
     border: 5px solid #8b4513;
+    overflow-x: hidden; 
+    text-align: center;
 }
 
 .container {
     max-width: 90%;
-    margin: auto;
+    margin: 2%;
     background: white;
     padding: 20px;
     border-radius: 8px;
@@ -378,12 +380,390 @@ input[type="date"] {
 }
 
 @media (max-width: 768px) {
-    .filter-container {
-        flex-direction: column;
+    html, body {
+        max-width: 768px;
+        overflow-x: hidden; /* 隐藏横向溢出 */
+        font-size: 12px; /* 设置根元素的字体大小 */
+        margin: 0;
+        padding: 0;
+        max-width: 768px;
+        border: none;
     }
 
     .search-container,
     .date-filter {
         width: 100%;
+        overflow-x: hidden;
     }
+
+
+    body {
+        font-size: 0.8rem; /* 18px相对于16px的根字体大小 */
+        overflow-x: hidden;
+    }
+
+    .container {
+        width: 100%; /* 确保容器宽度不超过视口 */
+        margin: 3%;
+        background: white;
+        padding: 1em;
+        border-radius: 0.5rem;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        box-sizing: border-box; /* 包含内边距和边框 */
+      
+    }
+
+    .logo {
+        max-width:auto;
+        display: block;
+        margin: 0 auto 1.125rem;
+    }
+    
+
+    h2 {
+        text-align: center;
+        color: #8b4513;
+        font-weight: 600;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    
+    th,
+    td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 2px solid #8b4513;
+    }
+    
+    th {
+        background-color: #8b4513;
+        color: white;
+        box-shadow: 5px 0px 6px rgba(0, 0, 0, 0.1);
+        /* 添加阴影 */
+    }
+    
+    .expand-btn {
+        cursor: pointer;
+        background-color: #8b4513;
+        color: white;
+        border: none;
+        padding: 0rem 1rem;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+    
+    .expand-btn:hover {
+        background-color: #5a2d0c;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    .search-input {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+        background-color: white;
+        color: #333;
+    }
+    
+    .details {
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+    
+    .details-column {
+        flex: 1;
+        padding: 0 1rem;
+    }
+    
+    .divider {
+        width: 0.2rem;
+        background-color: #8b4513;
+        margin: 0 1rem;
+        align-self: stretch;
+    }
+    
+    .service-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .details-section {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.8rem;
+    }
+    
+    .details-section.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .details-section h4 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .details-lists {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .details-section ul {
+        margin: 0;
+        padding-left: 1rem;
+    }
+    
+    .details-section li {
+        margin-bottom: 0.4rem;
+    }
+    
+    .details-section p {
+        margin: 0.9rem 0;
+    }
+    
+    .license-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0.8rem 0;
+    }
+    
+    .license-list li {
+        margin: 0.4rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-bottom: 1.2rem;
+    }
+    
+    .archive-toggle-btn {
+        background-color: #346cb0;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.2rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-weight: 600;
+        position:relative;
+        right: 0;
+        top: 0;
+    }
+    
+    .archive-toggle-btn:hover {
+        background-color: #275a98;
+    }
+    
+    .archive-btn {
+        background-color: #dd6b55;
+        color: white;
+        border: none;
+        padding: 5px 0.9rem;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 5px;
+        font-size: 1rem;
+    }
+    
+    .archive-btn:hover {
+        background-color: #c55b47;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: start;
+    }
+    
+    .edit-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: black;
+        margin-right: 8px;
+    }
+    
+    .edit-btn.save-mode {
+        background-color: #4CAF50;
+        color: black;
+        border-color: #4CAF50;
+        margin-right: 0.5rem;
+    }
+    
+    .edit-field {
+        display: flex;
+        gap: 0.6rem;
+    }
+    
+    .edit-field input {
+        padding: 4px 0.6rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 100%;
+    }
+    
+    td input {
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 100%;
+    }
+    
+    .details-section textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-top: 4px;
+        font-family: inherit;
+    }
+    
+    .details-section input {
+        width: calc(100% - 16px);
+        padding: 4px 0.6rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-top: 4px;
+    }
+    
+    .details-lists input,
+    .details-lists textarea {
+        margin-top: 8px;
+        display: block;
+    }
+    
+    .license-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    
+    .license-toggle input[type="checkbox"] {
+        margin: 0;
+    }
+    
+    .details-lists input {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-top: 4px;
+    }
+    
+    input[type="date"] {
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-left: 0.6rem;
+    }
+    
+    .details-section input[type="checkbox"] {
+        margin-left: 0.6rem;
+        width: auto;
+        cursor: pointer;
+    }
+    
+    .results-count {
+        margin: 1rem 0;
+        font-size: 1rem;
+        color: #666;
+        text-align: left;
+    }
+    
+    /* If you want it to stand out a bit more */
+    .results-count {
+        background-color: #f5f5f5;
+        padding: 5px 0.8rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    .filter-container {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: center;
+    }
+    
+    .search-container {
+        flex: 1;
+    }
+    
+    .date-filter {
+        flex: 1;
+
+    }
+    
+    .date-filter-labels {
+        padding: 0;
+        margin: 0;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .date-filter span {
+        display: block;
+        font-weight: 500;
+    }
+    
+    .date-inputs {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .date-inputs input[type="date"] {
+        padding: 0.6rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        flex: 1;
+        background-color: #8b4513;
+    }
+    
+    .clear-dates-btn {
+        background-color: #8b4513;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 4px 0.6rem;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+
+
 }

@@ -11,7 +11,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
+  overflow-x: hidden; 
 }
 
 html, body {
@@ -19,6 +19,8 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
   overflow-y: auto;
+  overflow-x: hidden; 
+  text-align: center;
 }
