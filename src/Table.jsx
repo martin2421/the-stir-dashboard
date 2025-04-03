@@ -25,7 +25,7 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
             // Parse the current eventVenue or create a new object
             const currentVenue = prev.eventVenue
                 ? JSON.parse(prev.eventVenue)
-                : { venue_location: '', venue_capacity: '' };
+                : { venue_location: '', venue_capacity: '', venue_equipment: '[]' };
 
             // Update the specific field
             currentVenue[field] = value;
@@ -38,52 +38,38 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
         });
     };
 
-    const handleChange = (field, value, isArray = false, isLicense = false) => {
+    const handleStorageNeedsChange = (field, value) => {
+        setEditedClient(prev => {
+            // Parse the current storageNeeds or create a new object
+            const currentStorage = prev.storageNeeds
+                ? JSON.parse(prev.storageNeeds)
+                : { dryStorage: '', frozenStorage: '' };
+
+            // Update the specific field
+            currentStorage[field] = value;
+
+            // Return updated state with new JSON string
+            return {
+                ...prev,
+                storageNeeds: JSON.stringify(currentStorage)
+            };
+        });
+    };
+
+    const handleChange = (field, value, isLicense = false) => {
         setEditedClient(prev => {
             let processedValue = value;
 
-            if (isArray) {
-                // Handle array fields (services, products)
-                if (typeof value === 'string') {
-                    processedValue = value.split(',').map(item => item.trim()).filter(item => item !== '');
-                } else if (!Array.isArray(value)) {
-                    processedValue = [];
-                }
-
-                // Don't stringify arrays for services and products
-                if (field === 'products' || field === 'services') {
-                    // Keep as actual array, not string representation
-                    return {
-                        ...prev,
-                        [field]: processedValue
-                    };
-                }
-            } else if (isLicense) {
+            if (isLicense) {
                 processedValue = JSON.stringify(value);
             } else if ((field === 'createdAt' || field === 'dateSignedUp') && value) {
                 // Process date fields
                 processedValue = new Date(value).toISOString();
-            } else if (field === 'venue_location' || field === 'venue_capacity') {
-                try {
-                    const eventVenue = prev.eventVenue
-                        ? JSON.parse(prev.eventVenue)
-                        : { venue_location: '', venue_capacity: '' };
-                    eventVenue[field.replace('venue_', '')] = value;
-                    processedValue = JSON.stringify(eventVenue);
-                } catch (err) {
-                    console.error('Error parsing eventVenue:', err);
-                    const eventVenue = { venue_location: '', venue_capacity: '' };
-                    eventVenue[field.replace('venue_', '')] = value;
-                    processedValue = JSON.stringify(eventVenue);
-                }
             }
 
             return {
                 ...prev,
-                [field]: processedValue,
-                eventVenue: field === 'venue_location' || field === 'venue_capacity'
-                    ? processedValue
-                    : prev.eventVenue
+                [field]: processedValue
             };
         });
     };
@@ -102,35 +88,6 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
         }));
     };
 
-    const parseList = (items) => {
-        if (!items) return [];
-        if (Array.isArray(items)) return items;
-        try {
-            // First try JSON parse for JSON string arrays
-            return typeof items === 'string' ? JSON.parse(items) : [];
-        } catch (error) {
-            // If JSON parse fails, try comma-separated string
-            return typeof items === 'string' ?
-                items.split(',').map(item => item.trim()) :
-                [];
-        }
-    };
-
-    const formatPhoneNumber = (phoneNumber) => {
-        if (!phoneNumber) return 'Not specified';
-        // Remove all non-digit characters
-        const cleaned = ('' + phoneNumber).replace(/\D/g, '');
-        // Check if the number has 10 digits
-        const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-        if (match) {
-            return `+1 (${match[1]}) ${match[2]}-${match[3]}`;
-        }
-        return phoneNumber; // Return original if format doesn't match
-    };
-
-    const servicesList = parseList(client.services);
-    const productsList = parseList(client.products);
-
     const formatLicenses = (licenses) => {
         if (!licenses) return [];
         try {
@@ -146,28 +103,11 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
     };
 
     const licensesList = formatLicenses(client.licenses);
+    const isEventVenue = client.service === 'Event Venue';
+    const isWarehouse = client.service === 'Warehouse';
 
     return (
         <>
-            {/* <tr>
-                <td>{`${client.firstName} ${client.lastName}`}</td>
-                <td>{client.businessName}</td>
-                <td>{client.email}</td>
-                <td>{formatPhoneNumber(client.phoneNumber)}</td>
-                <td>
-                    <ul className="service-list">
-                        {servicesList.map((service, index) => (
-                            <li key={index}>{service}</li>
-                        ))}
-                    </ul>
-                </td>
-                <td>
-                    <button className="expand-btn" onClick={onToggle}>
-                        {isExpanded ? 'Hide Details' : 'View Details'}
-                    </button>
-                </td>
-            </tr> */}
-
             <tr>
                 <td>
                     {isEditing ? (
@@ -215,26 +155,17 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                             onChange={(e) => handleChange('phoneNumber', e.target.value)}
                         />
                     ) : (
-                        formatPhoneNumber(client.phoneNumber)
+                        client.phoneNumber || 'Not specified'
                     )}
                 </td>
                 <td>
                     {isEditing ? (
                         <input
-                            value={Array.isArray(editedClient.services)
-                                ? editedClient.services.join(', ')
-                                : typeof editedClient.services === 'string'
-                                    ? editedClient.services
-                                    : ''}
-                            onChange={(e) => handleChange('services', e.target.value, true)}
-                            placeholder="Service 1, Service 2, ..."
+                            value={editedClient.service || ''}
+                            onChange={(e) => handleChange('service', e.target.value)}
                         />
                     ) : (
-                        <ul className="service-list">
-                            {servicesList.map((service, index) => (
-                                <li key={index}>{service}</li>
-                            ))}
-                        </ul>
+                        client.service || 'Not specified'
                     )}
                 </td>
                 <td>
@@ -270,6 +201,17 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                             <div className="details-section">
                                 <h4>Business Information</h4>
                                 <p>
+                                    <strong>Business Type:</strong>{' '}
+                                    {isEditing ? (
+                                        <input
+                                            value={editedClient.businessType || ''}
+                                            onChange={(e) => handleChange('businessType', e.target.value)}
+                                        />
+                                    ) : (
+                                        client.businessType || 'Not specified'
+                                    )}
+                                </p>
+                                <p>
                                     <strong>Business Stage:</strong>{' '}
                                     {isEditing ? (
                                         <input
@@ -277,7 +219,7 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                                             onChange={(e) => handleChange('businessStage', e.target.value)}
                                         />
                                     ) : (
-                                        client.businessStage
+                                        client.businessStage || 'Not specified'
                                     )}
                                 </p>
                                 <p>
@@ -291,9 +233,7 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                                             onChange={(e) => handleChange('createdAt', e.target.value)}
                                         />
                                     ) : (
-                                        client.createdAt
-                                            ? new Date(client.createdAt).toLocaleDateString()
-                                            : new Date().toLocaleDateString()
+                                        client.createdAt || 'Not specified'
                                     )}
                                 </p>
                                 <p>
@@ -307,178 +247,134 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                                             onChange={(e) => handleChange('dateSignedUp', e.target.value)}
                                         />
                                     ) : (
-                                        client.dateSignedUp
-                                            ? new Date(client.dateSignedUp).toLocaleDateString()
-                                            : 'Not specified'
+                                        client.dateSignedUp || 'Not specified'
                                     )}
                                 </p>
                             </div>
 
-                            {servicesList.includes('Event Venue') ? (
-                                <>
-                                    <div className="details-section">
-                                        <h4>Event Details</h4>
-                                        <p>
-                                            <strong>Venue Location:</strong>{' '}
+                            {isEventVenue && (
+                                <div className="details-section">
+                                    <h4>Event Details</h4>
+                                    <p>
+                                        <strong>Venue Location:</strong>{' '}
+                                        {isEditing ? (
+                                            <input
+                                                value={editedClient.eventVenue
+                                                    ? JSON.parse(editedClient.eventVenue).venue_location || ''
+                                                    : ''}
+                                                onChange={(e) => handleEventVenueChange('venue_location', e.target.value)}
+                                            />
+                                        ) : (
+                                            client.eventVenue
+                                                ? JSON.parse(client.eventVenue).venue_location || 'Not specified'
+                                                : 'Not specified'
+                                        )}
+                                    </p>
+                                    <p>
+                                        <strong>Venue Capacity:</strong>{' '}
+                                        {isEditing ? (
+                                            <input
+                                                value={editedClient.eventVenue
+                                                    ? JSON.parse(editedClient.eventVenue).venue_capacity || ''
+                                                    : ''}
+                                                onChange={(e) => handleEventVenueChange('venue_capacity', e.target.value)}
+                                            />
+                                        ) : (
+                                            client.eventVenue
+                                                ? JSON.parse(client.eventVenue).venue_capacity || 'Not specified'
+                                                : 'Not specified'
+                                        )}
+                                    </p>
+                                    <p>
+                                        <strong>Venue Equipment:</strong>{' '}
+                                        {isEditing ? (
+                                            <input
+                                                value={editedClient.eventVenue
+                                                    ? JSON.parse(editedClient.eventVenue).venue_equipment || '[]'
+                                                    : '[]'}
+                                                onChange={(e) => handleEventVenueChange('venue_equipment', e.target.value)}
+                                            />
+                                        ) : (
+                                            client.eventVenue && JSON.parse(client.eventVenue).venue_equipment
+                                                ? JSON.parse(client.eventVenue).venue_equipment
+                                                : 'Not specified'
+                                        )}
+                                    </p>
+                                </div>
+                            )}
+
+                            {isWarehouse && (
+                                <div className="details-section">
+                                    <h4>Storage Needs</h4>
+                                    <p>
+                                        <strong>Dry Storage:</strong>{' '}
+                                        {isEditing ? (
+                                            <input
+                                                value={editedClient.storageNeeds
+                                                    ? JSON.parse(editedClient.storageNeeds).dryStorage || ''
+                                                    : ''}
+                                                onChange={(e) => handleStorageNeedsChange('dryStorage', e.target.value)}
+                                            />
+                                        ) : (
+                                            client.storageNeeds
+                                                ? JSON.parse(client.storageNeeds).dryStorage || 'Not specified'
+                                                : 'Not specified'
+                                        )}
+                                    </p>
+                                    <p>
+                                        <strong>Frozen Storage:</strong>{' '}
+                                        {isEditing ? (
+                                            <input
+                                                value={editedClient.storageNeeds
+                                                    ? JSON.parse(editedClient.storageNeeds).frozenStorage || ''
+                                                    : ''}
+                                                onChange={(e) => handleStorageNeedsChange('frozenStorage', e.target.value)}
+                                            />
+                                        ) : (
+                                            client.storageNeeds
+                                                ? JSON.parse(client.storageNeeds).frozenStorage || 'Not specified'
+                                                : 'Not specified'
+                                        )}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="details-section">
+                                <h4>Licenses</h4>
+                                <ul>
+                                    {licensesList.map((license, index) => (
+                                        <li key={index}>
+                                            {license.name}:{' '}
                                             {isEditing ? (
-                                                <input
-                                                    value={editedClient.eventVenue
-                                                        ? JSON.parse(editedClient.eventVenue).venue_location || ''
-                                                        : ''}
-                                                    onChange={(e) => handleEventVenueChange('venue_location', e.target.value)}
-                                                />
-                                            ) : (
-                                                client.eventVenue
-                                                    ? JSON.parse(client.eventVenue).venue_location || 'Not specified'
-                                                    : 'Not specified'
-                                            )}
-                                        </p>
-                                        <p>
-                                            <strong>Venue Capacity:</strong>{' '}
-                                            {isEditing ? (
-                                                <input
-                                                    value={editedClient.eventVenue
-                                                        ? JSON.parse(editedClient.eventVenue).venue_capacity || ''
-                                                        : ''}
-                                                    onChange={(e) => handleEventVenueChange('venue_capacity', e.target.value)}
-                                                />
-                                            ) : (
-                                                client.eventVenue
-                                                    ? JSON.parse(client.eventVenue).venue_capacity || 'Not specified'
-                                                    : 'Not specified'
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className="details-section">
-                                        <h4>Products & Licenses</h4>
-                                        <div className="details-lists">
-                                            <div>
-                                                <strong>Products:</strong>
-                                                {isEditing ? (
+                                                <label className="license-toggle">
                                                     <input
-                                                        value={Array.isArray(editedClient.products)
-                                                            ? editedClient.products.join(', ')
-                                                            : typeof editedClient.products === 'string'
-                                                                ? editedClient.products.startsWith('[')
-                                                                    ? JSON.parse(editedClient.products).join(', ')
-                                                                    : editedClient.products
-                                                                : ''}
-                                                        onChange={(e) => handleChange('products', e.target.value, true)}
-                                                        placeholder="Product 1, Product 2, ..."
+                                                        type="checkbox"
+                                                        checked={license.status}
+                                                        onChange={(e) => handleLicenseChange(license.name, e.target.checked)}
                                                     />
-                                                ) : (
-                                                    <ul>
-                                                        {(Array.isArray(client.products)
-                                                            ? client.products
-                                                            : typeof client.products === 'string'
-                                                                ? client.products.startsWith('[')
-                                                                    ? JSON.parse(client.products)
-                                                                    : client.products.split(',').map(p => p.trim())
-                                                                : []
-                                                        ).map((product, index) => (
-                                                            <li key={index}>{product}</li>
-                                                        ))}
-                                                    </ul>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <strong>Licenses:</strong>
-                                                <ul>
-                                                    {licensesList.map((license, index) => (
-                                                        <li key={index}>
-                                                            {license.name}:{' '}
-                                                            {isEditing ? (
-                                                                <label className="license-toggle">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={license.status}
-                                                                        onChange={(e) => handleLicenseChange(license.name, e.target.checked)}
-                                                                    />
-                                                                    {license.status ? '✅' : '❌'}
-                                                                </label>
-                                                            ) : (
-                                                                license.status ? '✅' : '❌'
-                                                            )}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                    {license.status ? '✅' : '❌'}
+                                                </label>
+                                            ) : (
+                                                license.status ? '✅' : '❌'
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
 
+                            <div className="details-section">
+                                <h4>Additional Notes</h4>
+                                {isEditing ? (
+                                    <textarea
+                                        value={editedClient.notes || ''}
+                                        onChange={(e) => handleChange('notes', e.target.value)}
+                                        rows={4}
+                                    />
+                                ) : (
+                                    <p>{client.notes || 'No additional notes'}</p>
+                                )}
+                            </div>
 
-                                    <div className="details-section">
-                                        <h4>Requirements</h4>
-                                        <div className="details-lists">
-                                            <div>
-                                                <strong>Additional Notes</strong>
-                                                {isEditing ? (
-                                                    <textarea
-                                                        value={editedClient.notes || ''}
-                                                        onChange={(e) => handleChange('notes', e.target.value)}
-                                                        rows={4}
-                                                    />
-                                                ) : (
-                                                    <p>{client.notes || 'No additional notes'}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <strong>Space Needs:</strong>
-                                                {isEditing ? (
-                                                    <input
-                                                        value={editedClient.spaceNeeds || ''}
-                                                        onChange={(e) => handleChange('spaceNeeds', e.target.value)}
-                                                    />
-                                                ) : (
-                                                    <p>{client.spaceNeeds || 'Not specified'}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </>)
-                                :
-                                (<>
-                                    <div className="details-section">
-                                        <h4>Products & Licenses</h4>
-                                        <div className="details-lists">
-                                            <div>
-                                                <strong>Products:</strong>
-                                                <ul>
-                                                    {productsList.map((product, index) => (
-                                                        <li key={index}>{product}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <strong>Licenses:</strong>
-                                                <ul>
-                                                    {licensesList.map((license, index) => (
-                                                        <li key={index}>
-                                                            {license.name}: {license.status ? '✅' : '❌'}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div className="details-section full-width">
-                                        <h4>Requirements</h4>
-                                        <div className="details-lists">
-                                            <div>
-                                                <strong>Additional Notes</strong>
-                                                <p>{client.notes}</p>
-                                            </div>
-                                            <div>
-                                                <strong>Space Needs:</strong>
-                                                <p>{client.spaceNeeds || 'Not specified'}</p>
-
-                                            </div>
-                                        </div>
-                                    </div></>)}
                         </div>
                     </td>
                 </tr>
@@ -591,13 +487,12 @@ export default function Table() {
                 </div>
 
                 <div className="date-filter">
-                    <span>Filter by Stir membership date:</span>
+                    <span>Filter by Stir Membership Date:</span>
 
                     <div className="date-filter-labels">
                         <p>Start</p>
                         <p>End</p>
                     </div>
-
 
                     <div className="date-inputs">
                         <input
@@ -606,7 +501,6 @@ export default function Table() {
                             onChange={(e) => setDateRangeStart(e.target.value)}
                             placeholder="Start date"
                         />
-                        {/* <span>to</span> */}
                         <input
                             type="date"
                             value={dateRangeEnd}
