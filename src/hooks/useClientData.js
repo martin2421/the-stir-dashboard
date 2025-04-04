@@ -89,6 +89,66 @@ export const useClientData = () => {
         }
     };
 
+    const addClient = async (newClient) => {
+        try {
+            // First, find the special entry with id = -1 to get the next available ID
+            const specialEntryParams = {
+                TableName: 'stir-test2',
+                KeyConditionExpression: 'id = :idValue',
+                ExpressionAttributeValues: {
+                    ':idValue': -1
+                }
+            };
+
+            let nextId = 0;  // Default value if no special entry exists
+
+            try {
+                const specialEntryResult = await dynamoDB.query(specialEntryParams).promise();
+                if (specialEntryResult.Items && specialEntryResult.Items.length > 0) {
+                    nextId = specialEntryResult.Items[0].nextId;
+
+                    // Update the special entry with incremented nextId
+                    const updateSpecialEntryParams = {
+                        TableName: 'stir-test2',
+                        Key: { id: -1 },
+                        UpdateExpression: 'set nextId = :nextIdValue',
+                        ExpressionAttributeValues: {
+                            ':nextIdValue': nextId + 1
+                        }
+                    };
+
+                    await dynamoDB.update(updateSpecialEntryParams).promise();
+                }
+            } catch (specialEntryError) {
+                console.error('Error fetching nextId:', specialEntryError);
+                // If there's an error, we'll just use the default nextId value
+            }
+
+            // Add the new client with the obtained ID
+            const clientToAdd = {
+                ...newClient,
+                id: nextId,
+                chatHistory: "chat history goes here",
+                currentState: "current state of chatbot goes here"
+            };
+
+            const addParams = {
+                TableName: 'stir-test2',
+                Item: clientToAdd
+            };
+
+            await dynamoDB.put(addParams).promise();
+
+            // Refresh the clients list
+            await fetchClients();
+
+            return true;
+        } catch (error) {
+            console.error('Error adding client:', error);
+            throw error;
+        }
+    };
+
     const archiveClient = async (client) => {
         try {
             // Step 1: Add the client to the archive table
@@ -135,6 +195,7 @@ export const useClientData = () => {
         error,
         updateClient,
         archiveClient,
+        addClient,
         fetchClients,
         fetchArchivedClients
     };

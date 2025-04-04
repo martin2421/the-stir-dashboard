@@ -166,32 +166,6 @@ th {
     gap: 8px;
 }
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.archive-toggle-btn {
-    background-color: #346cb0;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-weight: 600;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
-
-.archive-toggle-btn:hover {
-    background-color: #275a98;
-}
-
 .archive-btn {
     background-color: #dd6b55;
     color: white;
@@ -764,6 +738,166 @@ input[type="date"] {
         font-size: 1rem;
     }
 
+}
 
+.top-actions {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin: 20px 0;
+}
 
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.add-prospect-btn,
+.archive-toggle-btn {
+    background-color: #8b4513;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+    min-width: 180px;
+}
+
+.add-prospect-btn:hover,
+.archive-toggle-btn:hover {
+    background-color: #5a2d0c;
+}
+
+.add-prospect-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* For mobile screens */
+@media (max-width: 768px) {
+    .action-buttons {
+        width: 100%;
+        align-items: flex-end;
+    }
+    
+    .add-prospect-btn,
+    .archive-toggle-btn {
+        width: 100%;
+        max-width: 180px;
+    }
+
+    .archive-toggle-btn {
+        position: static;
+    }
+}
+
+.licenses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.license-item {
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.license-toggle {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.license-toggle input {
+    margin-right: 8px;
+}
+
+.license-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 8px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.status-indicator.active {
+    background-color: #4caf50;
+    color: white;
+}
+
+.status-indicator.inactive {
+    background-color: #f44336;
+    color: white;
+}
+
+.license-name {
+    flex: 1;
+}
+
+/* Add this new CSS for the controls bar */
+
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.add-prospect-btn, 
+.expand-all-btn {
+    background-color: #8b4513;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+}
+
+.add-prospect-btn:hover, 
+.expand-all-btn:hover {
+    background-color: #5a2d0c;
+}
+
+.add-prospect-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.results-count {
+    font-size: 16px;
+    color: #333;
+    text-align: center;
+    padding: 10px;
+    font-weight: 500;
+}
+
+/* For mobile screens */
+@media (max-width: 768px) {
+    .table-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .results-count {
+        order: 3; /* Move to bottom on mobile */
+    }
 }

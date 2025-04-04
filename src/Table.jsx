@@ -1,11 +1,24 @@
 import './Table.css';
 import React, { useState } from 'react';
 import { useClientData } from './hooks/useClientData';
+import AddProspectModal from './AddProspectModal';
 
 const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived }) => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedClient, setEditedClient] = useState({ ...client });
+
+    // Define all possible licenses
+    const allLicenses = [
+        "Stir Maker Membership",
+        "Valid FoodSafe Level 1 Certification",
+        "Interior Health Food Premises Approval",
+        "Commercial Liability Insurance",
+        "City of Kamloops Business License",
+        "Completed 2-Year Business Plan",
+        "Food Corridor Membership",
+        "Client Interest Form"
+    ];
 
     const handleEdit = () => {
         if (isEditing) {
@@ -92,6 +105,9 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
         if (!licenses) return [];
         try {
             const licenseObj = typeof licenses === 'string' ? JSON.parse(licenses) : licenses;
+
+            // Return entries for licenses that are present in the data
+            // For older records, ensure we only show licenses that are actually defined
             return Object.entries(licenseObj).map(([name, hasLicense]) => ({
                 name,
                 status: hasLicense
@@ -102,9 +118,20 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
         }
     };
 
+    // Get the licenses from the client data
     const licensesList = formatLicenses(client.licenses);
-    const isEventVenue = client.service === 'Event Venue';
-    const isWarehouse = client.service === 'Warehouse';
+
+    // Initialize missing licenses with default values (false)
+    const existingLicenseNames = licensesList.map(license => license.name);
+    const missingLicenses = allLicenses
+        .filter(name => !existingLicenseNames.includes(name))
+        .map(name => ({ name, status: false }));
+
+    // Combine existing and missing licenses
+    const allLicensesList = [...licensesList, ...missingLicenses];
+
+    const isEventVenue = client.service === 'Event Venue Rental';
+    const isWarehouse = client.service === 'Warehouse Storage Rental';
 
     return (
         <>
@@ -340,11 +367,10 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                             )}
 
                             <div className="details-section">
-                                <h4>Licenses</h4>
-                                <ul>
-                                    {licensesList.map((license, index) => (
-                                        <li key={index}>
-                                            {license.name}:{' '}
+                                <h4>Licenses & Certifications</h4>
+                                <div className="licenses-grid">
+                                    {allLicensesList.map((license, index) => (
+                                        <div className="license-item" key={index}>
                                             {isEditing ? (
                                                 <label className="license-toggle">
                                                     <input
@@ -352,14 +378,19 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                                                         checked={license.status}
                                                         onChange={(e) => handleLicenseChange(license.name, e.target.checked)}
                                                     />
-                                                    {license.status ? '✅' : '❌'}
+                                                    {license.name}
                                                 </label>
                                             ) : (
-                                                license.status ? '✅' : '❌'
+                                                <div className="license-status">
+                                                    <span className={`status-indicator ${license.status ? 'active' : 'inactive'}`}>
+                                                        {license.status ? '✓' : '✗'}
+                                                    </span>
+                                                    <span className="license-name">{license.name}</span>
+                                                </div>
                                             )}
-                                        </li>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             </div>
 
                             <div className="details-section">
@@ -384,12 +415,13 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
 };
 
 export default function Table() {
-    const { clients, archivedClients, loading, error, updateClient, archiveClient } = useClientData();
+    const { clients, archivedClients, loading, error, updateClient, archiveClient, addClient } = useClientData();
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedRows, setExpandedRows] = useState(new Set());
     const [showArchived, setShowArchived] = useState(false);
     const [dateRangeStart, setDateRangeStart] = useState('');
     const [dateRangeEnd, setDateRangeEnd] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleSaveClient = async (updatedClient) => {
         try {
@@ -406,6 +438,16 @@ export default function Table() {
             alert(`${client.firstName} ${client.lastName} has been archived.`);
         } catch (error) {
             alert(`Error archiving client: ${error.message}`);
+        }
+    };
+
+    const handleAddClient = async (newClient) => {
+        try {
+            await addClient(newClient);
+            setIsModalOpen(false);
+            alert(`${newClient.firstName} ${newClient.lastName} has been added successfully.`);
+        } catch (error) {
+            alert(`Error adding client: ${error.message}`);
         }
     };
 
@@ -465,12 +507,16 @@ export default function Table() {
                 alt="Logo"
             />
 
-            <button
-                className="archive-toggle-btn"
-                onClick={() => setShowArchived(!showArchived)}
-            >
-                {showArchived ? 'View Current' : 'View Archived'}
-            </button>
+            <div className="top-actions">
+                <div className="action-buttons">
+                    <button
+                        className="archive-toggle-btn"
+                        onClick={() => setShowArchived(!showArchived)}
+                    >
+                        {showArchived ? 'View Current' : 'View Archived'}
+                    </button>
+                </div>
+            </div>
 
             <h2>{showArchived ? 'Archived Prospects' : 'Prospects Data Table'}</h2>
 
@@ -524,13 +570,38 @@ export default function Table() {
 
             <br />
 
-            <div className="results-count">
-                {filteredClients.length === 1
-                    ? "1 client found"
-                    : `${filteredClients.length} ${showArchived ? 'archived' : ''} prospects found`}
-                {(searchTerm || dateRangeStart || dateRangeEnd) &&
-                    dataToDisplay.filter(client => client.id !== -1).length !== filteredClients.length &&
-                    ` (from ${dataToDisplay.filter(client => client.id !== -1).length} total)`}
+            <div className="table-controls">
+                <button
+                    className="add-prospect-btn"
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={showArchived}
+                >
+                    Add New Prospect
+                </button>
+
+                <div className="results-count">
+                    {filteredClients.length === 1
+                        ? "1 client found"
+                        : `${filteredClients.length} ${showArchived ? 'archived' : ''} prospects found`}
+                    {(searchTerm || dateRangeStart || dateRangeEnd) &&
+                        dataToDisplay.filter(client => client.id !== -1).length !== filteredClients.length &&
+                        ` (from ${dataToDisplay.filter(client => client.id !== -1).length} total)`}
+                </div>
+
+                <button
+                    className="expand-all-btn"
+                    onClick={() => {
+                        if (expandedRows.size === filteredClients.length) {
+                            // If all are expanded, collapse all
+                            setExpandedRows(new Set());
+                        } else {
+                            // Otherwise, expand all
+                            setExpandedRows(new Set(filteredClients.map(client => client.id)));
+                        }
+                    }}
+                >
+                    {expandedRows.size === filteredClients.length ? 'Collapse All' : 'Expand All'}
+                </button>
             </div>
 
             <table>
@@ -558,6 +629,13 @@ export default function Table() {
                     ))}
                 </tbody>
             </table>
+
+            <AddProspectModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleAddClient}
+            />
+
         </div>
     );
 }
