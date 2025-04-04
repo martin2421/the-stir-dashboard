@@ -21,6 +21,9 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
     ];
 
     const handleEdit = () => {
+        // Don't allow editing if we're viewing archived prospects
+        if (isArchived) return;
+
         if (isEditing) {
             onSave(editedClient);
         }
@@ -200,12 +203,16 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                         <button className="expand-btn" onClick={onToggle}>
                             {isExpanded ? 'Hide Details' : 'View Details'}
                         </button>
-                        <button
-                            className={`edit-btn ${isEditing ? 'save-mode' : ''}`}
-                            onClick={handleEdit}
-                        >
-                            {isEditing ? 'Save' : 'Edit'}
-                        </button>
+
+                        {!isArchived && (
+                            <button
+                                className={`edit-btn ${isEditing ? 'save-mode' : ''}`}
+                                onClick={handleEdit}
+                            >
+                                {isEditing ? 'Save' : 'Edit'}
+                            </button>
+                        )}
+
                         {!isEditing && !isArchived && (
                             <button
                                 className="archive-btn"
