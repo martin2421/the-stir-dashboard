@@ -1,5 +1,5 @@
 import './Table.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClientData } from './hooks/useClientData';
 import AddProspectModal from './AddProspectModal';
 
@@ -7,6 +7,7 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedClient, setEditedClient] = useState({ ...client });
+    const [localLicenses, setLocalLicenses] = useState([]);
 
     // Define all possible licenses
     const allLicenses = [
@@ -20,12 +21,31 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
         "Client Interest Form"
     ];
 
+    // Initialize licenses when entering edit mode or when client changes
+    useEffect(() => {
+        if (isEditing || client.id !== editedClient.id) {
+            const currentLicenses = formatLicenses(editedClient.licenses);
+
+            // Initialize missing licenses with default values (false)
+            const existingLicenseNames = currentLicenses.map(license => license.name);
+            const missingLicenses = allLicenses
+                .filter(name => !existingLicenseNames.includes(name))
+                .map(name => ({ name, status: false }));
+
+            // Combine existing and missing licenses
+            setLocalLicenses([...currentLicenses, ...missingLicenses]);
+        }
+    }, [isEditing, client.id, editedClient.licenses]);
+
     const handleEdit = () => {
         // Don't allow editing if we're viewing archived prospects
         if (isArchived) return;
 
         if (isEditing) {
             onSave(editedClient);
+        } else {
+            // Reset editedClient when entering edit mode
+            setEditedClient({ ...client });
         }
         setIsEditing(!isEditing);
     };
@@ -91,6 +111,16 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
     };
 
     const handleLicenseChange = (licenseName, status) => {
+        // Update the local UI state immediately
+        setLocalLicenses(prev =>
+            prev.map(license =>
+                license.name === licenseName
+                    ? { ...license, status }
+                    : license
+            )
+        );
+
+        // Update the edited client data
         const currentLicenses = editedClient.licenses
             ? JSON.parse(editedClient.licenses)
             : {};
@@ -110,7 +140,6 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
             const licenseObj = typeof licenses === 'string' ? JSON.parse(licenses) : licenses;
 
             // Return entries for licenses that are present in the data
-            // For older records, ensure we only show licenses that are actually defined
             return Object.entries(licenseObj).map(([name, hasLicense]) => ({
                 name,
                 status: hasLicense
@@ -121,17 +150,17 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
         }
     };
 
-    // Get the licenses from the client data
+    // Get the licenses from the client data for display in non-edit mode
     const licensesList = formatLicenses(client.licenses);
 
-    // Initialize missing licenses with default values (false)
+    // Initialize missing licenses with default values (false) for non-edit mode
     const existingLicenseNames = licensesList.map(license => license.name);
     const missingLicenses = allLicenses
         .filter(name => !existingLicenseNames.includes(name))
         .map(name => ({ name, status: false }));
 
-    // Combine existing and missing licenses
-    const allLicensesList = [...licensesList, ...missingLicenses];
+    // Combine existing and missing licenses for non-edit mode
+    const allLicensesList = isEditing ? localLicenses : [...licensesList, ...missingLicenses];
 
     const isEventVenue = client.service === 'Event Venue Rental';
     const isWarehouse = client.service === 'Warehouse Storage Rental';
