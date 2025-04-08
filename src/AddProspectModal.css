@@ -9,6 +9,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    
 }
 
 .modal-content {
@@ -154,12 +155,12 @@
 }
 
 .cancel-button {
-    background-color: #f2f2f2;
-    color: #333;
+    background-color: #555;
+    color:#ddd;
 }
 
 .submit-button {
-    background-color: #0362fc;
+    background-color:#8b4513;
     color: #fff;
 }
 
@@ -196,6 +197,11 @@
 }
 
 @media (max-width: 768px) {
+    .modal-overlay {
+        align-items: flex-start; 
+        padding: 1px; 
+
+    }
     .checkbox-grid {
         grid-template-columns: 1fr;
     }
@@ -210,5 +216,29 @@
 
     .modal-content {
         width: 95%;
+        max-height: 95vh;
+        margin: 0 10px;
     }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="date"],
+    .form-group select,
+    .form-group textarea {
+        font-size: 15px;
+        padding: 10px;
+    }
+
+
+    .form-group input[type="date"]{
+        margin-left: -0.5%;
+    }
+
+    .form-group textarea {
+        font-size: 15px;
+        padding: 10px;
+        margin-left: -1%;
+    }
+
+
 }
