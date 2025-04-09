@@ -515,7 +515,7 @@ export default function Table() {
         try {
             await addClient(newClient);
             setIsModalOpen(false);
-            alert(`${newClient.firstName} ${newClient.lastName} has been added successfully.`);
+            alert(`Prospect has been added successfully.`);
         } catch (error) {
             alert(`Error adding client: ${error.message}`);
         }

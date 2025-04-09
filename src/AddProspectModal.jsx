@@ -187,62 +187,102 @@ const AddProspectModal = ({ isOpen, onClose, onSubmit }) => {
         }
     };
 
+    // const validateForm = () => {
+    //     const newErrors = {};
+
+    //     // Required fields validation
+    //     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    //     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+
+    //     // Email validation
+    //     if (!formData.email.trim()) {
+    //         newErrors.email = 'Email is required';
+    //     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    //         newErrors.email = 'Email is invalid';
+    //     }
+
+    //     // Phone validation
+    //     if (!formData.phoneNumber) {
+    //         newErrors.phoneNumber = 'Phone number is required';
+    //     } else if (formData.phoneNumber.replace(/\D/g, '').length !== 10) {
+    //         newErrors.phoneNumber = 'Phone number must be 10 digits';
+    //     }
+
+    //     // Service validation
+    //     if (!formData.service) newErrors.service = 'Service type is required';
+
+    //     // Venue capacity validation for Event Venue
+    //     if (formData.service === 'Event Venue Rental' && !eventVenueData.venue_capacity) {
+    //         newErrors.venue_capacity = 'Venue capacity is required';
+    //     }
+
+    //     setErrors(newErrors);
+    //     return Object.keys(newErrors).length === 0;
+    // };
+
     const validateForm = () => {
-        const newErrors = {};
-
-        // Required fields validation
-        if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-        if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-
-        // Email validation
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Email is invalid';
+        const errors = {};
+        
+        // Remove required validation for firstName, lastName, email, and phoneNumber
+        // Only validate if these fields have content but are invalid
+        
+        if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+            errors.email = "Invalid email format";
         }
-
-        // Phone validation
-        if (!formData.phoneNumber) {
-            newErrors.phoneNumber = 'Phone number is required';
-        } else if (formData.phoneNumber.replace(/\D/g, '').length !== 10) {
-            newErrors.phoneNumber = 'Phone number must be 10 digits';
+        
+        // Business name could still be required if needed
+        if (!formData.businessName?.trim()) {
+            errors.businessName = "Business name is required";
         }
-
-        // Service validation
-        if (!formData.service) newErrors.service = 'Service type is required';
-
-        // Venue capacity validation for Event Venue
-        if (formData.service === 'Event Venue Rental' && !eventVenueData.venue_capacity) {
-            newErrors.venue_capacity = 'Venue capacity is required';
+        
+        // Service is still required
+        if (!formData.service) {
+            errors.service = "Service is required";
         }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        
+        // Check if phone number format is valid but only if provided
+        if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
+            errors.phoneNumber = "Phone number must be 10 digits";
+        }
+        
+        return errors;
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        if (!validateForm()) {
+    
+        const validationErrors = validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
             return;
         }
-
-        // Prepare and submit the data
-        const submissionData = {
-            ...formData
+    
+        // Create a new client object
+        const newClient = {
+            ...formData,
+            id: Date.now().toString() // Generate a unique ID
         };
-
+    
         // Only include eventVenue if service is Event Venue
         if (formData.service !== 'Event Venue Rental') {
-            submissionData.eventVenue = '';
+            newClient.eventVenue = '';
         }
-
+    
         // Only include storageNeeds if service is Warehouse
         if (formData.service !== 'Warehouse Storage Rental') {
-            submissionData.storageNeeds = '';
+            newClient.storageNeeds = '';
         }
-
-        onSubmit(submissionData);
+    
+        // Ensure createdAt is set to today if not provided
+        if (!newClient.createdAt) {
+            newClient.createdAt = new Date().toISOString().split('T')[0];
+        }
+    
+        // Submit the data
+        onSubmit(newClient);
+        
+        // Close the modal
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -267,13 +307,13 @@ const AddProspectModal = ({ isOpen, onClose, onSubmit }) => {
                             <div className="form-row">
                                 <div className="form-group">
                                     <label htmlFor="firstName">
-                                        First Name <span className="required">*</span>
+                                        First Name
                                     </label>
                                     <input
                                         type="text"
                                         id="firstName"
                                         name="firstName"
-                                        value={formData.firstName}
+                                        value={formData.firstName || ''}
                                         onChange={handleChange}
                                         className={errors.firstName ? 'error' : ''}
                                     />
@@ -281,13 +321,13 @@ const AddProspectModal = ({ isOpen, onClose, onSubmit }) => {
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="lastName">
-                                        Last Name <span className="required">*</span>
+                                        Last Name
                                     </label>
                                     <input
                                         type="text"
                                         id="lastName"
                                         name="lastName"
-                                        value={formData.lastName}
+                                        value={formData.lastName || ''}
                                         onChange={handleChange}
                                         className={errors.lastName ? 'error' : ''}
                                     />
@@ -298,13 +338,13 @@ const AddProspectModal = ({ isOpen, onClose, onSubmit }) => {
                             <div className="form-row">
                                 <div className="form-group">
                                     <label htmlFor="email">
-                                        Email <span className="required">*</span>
+                                        Email
                                     </label>
                                     <input
                                         type="email"
                                         id="email"
                                         name="email"
-                                        value={formData.email}
+                                        value={formData.email || ''}
                                         onChange={handleChange}
                                         className={errors.email ? 'error' : ''}
                                     />
@@ -312,13 +352,13 @@ const AddProspectModal = ({ isOpen, onClose, onSubmit }) => {
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="phoneNumber">
-                                        Phone Number <span className="required">*</span>
+                                        Phone Number
                                     </label>
                                     <input
                                         type="text"
                                         id="phoneNumber"
                                         name="phoneNumber"
-                                        value={formData.phoneNumber}
+                                        value={formData.phoneNumber || ''}
                                         onChange={handlePhoneChange}
                                         placeholder="(xxx) xxx-xxxx"
                                         className={errors.phoneNumber ? 'error' : ''}
