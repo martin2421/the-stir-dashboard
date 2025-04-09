@@ -179,6 +179,47 @@ export const useClientData = () => {
         }
     };
 
+    const deleteClient = async (clientToDelete) => {
+        try {
+            // Determine which table to delete from based on whether it's archived
+            const tableName = clientToDelete.isArchived ? 'stir-archived' : 'stir-test2';
+            
+            // Set up the delete parameters
+            const deleteParams = {
+                TableName: tableName,
+                Key: {
+                    id: clientToDelete.id
+                }
+            };
+    
+            // Execute the delete operation on DynamoDB
+            await dynamoDB.delete(deleteParams).promise();
+            
+            // Update local state to reflect the change
+            if (tableName === 'stir-test2') {
+                setClients(prevClients => 
+                    prevClients.filter(client => client.id !== clientToDelete.id)
+                );
+            } else {
+                setArchivedClients(prevClients => 
+                    prevClients.filter(client => client.id !== clientToDelete.id)
+                );
+            }
+            
+            // Refresh data to ensure state is in sync with database
+            if (tableName === 'stir-test2') {
+                await fetchClients();
+            } else {
+                await fetchArchivedClients();
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error deleting client:', error);
+            throw error;
+        }
+    };
+
     // Call fetchClients when component mounts
     useEffect(() => {
         const fetchAllData = async () => {
@@ -196,6 +237,7 @@ export const useClientData = () => {
         updateClient,
         archiveClient,
         addClient,
+        deleteClient,
         fetchClients,
         fetchArchivedClients
     };

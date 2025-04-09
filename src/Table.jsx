@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useClientData } from './hooks/useClientData';
 import AddProspectModal from './AddProspectModal';
 
-const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived }) => {
+const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, onDelete, isArchived }) => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedClient, setEditedClient] = useState({ ...client });
@@ -53,6 +53,12 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
     const handleArchive = () => {
         if (window.confirm('Are you sure you want to archive this prospect?')) {
             onArchive(client);
+        }
+    };
+
+    const handleDelete = () => {
+        if (window.confirm('Are you sure you want to permanently delete this prospect? This action cannot be undone.')) {
+            onDelete(client);
         }
     };
 
@@ -219,10 +225,18 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                 </td>
                 <td>
                     {isEditing ? (
-                        <input
+                        <select
                             value={editedClient.service || ''}
                             onChange={(e) => handleChange('service', e.target.value)}
-                        />
+                            className="service-select"
+                        >
+                            <option value="">Select a service</option>
+                            <option value="Commercial Kitchen Rental">Commercial Kitchen Rental</option>
+                            <option value="Warehouse Storage Rental">Warehouse Storage Rental</option>
+                            <option value="Event Venue Rental">Event Venue Rental</option>
+                            <option value="Food Business Coaching">Food Business Coaching</option>
+                            <option value="E-Commerce">E-Commerce</option>
+                        </select>
                     ) : (
                         client.service || 'Not specified'
                     )}
@@ -251,6 +265,17 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
                                 Archive
                             </button>
                         )}
+
+                        {!isEditing && (
+                            <button
+                                className="delete-btn"
+                                onClick={handleDelete}
+                                title="Delete this prospect"
+                            >
+                                Delete
+                            </button>
+                        )}
+
                     </div>
                 </td>
             </tr>
@@ -451,7 +476,7 @@ const TableRow = ({ client, isExpanded, onToggle, onSave, onArchive, isArchived 
 };
 
 export default function Table() {
-    const { clients, archivedClients, loading, error, updateClient, archiveClient, addClient } = useClientData();
+    const { clients, archivedClients, loading, error, updateClient, archiveClient, addClient, deleteClient } = useClientData();
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedRows, setExpandedRows] = useState(new Set());
     const [showArchived, setShowArchived] = useState(false);
@@ -474,6 +499,15 @@ export default function Table() {
             alert(`${client.firstName} ${client.lastName} has been archived.`);
         } catch (error) {
             alert(`Error archiving client: ${error.message}`);
+        }
+    };
+
+    const handleDelete = async (client) => {
+        try {
+            await deleteClient(client);
+            alert(`Prospect has been permanently deleted.`);
+        } catch (error) {
+            alert(`Error deleting client: ${error.message}`);
         }
     };
 
@@ -660,6 +694,7 @@ export default function Table() {
                             onToggle={() => toggleDetails(client.id)}
                             onSave={handleSaveClient}
                             onArchive={handleArchive}
+                            onDelete={handleDelete}
                             isArchived={showArchived}
                         />
                     ))}
